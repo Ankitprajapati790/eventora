@@ -25,7 +25,7 @@ Use this guide to configure a local database, run the complete app, create the f
 
 - Node.js 20 or newer and npm
 - A MongoDB database, either local or hosted with MongoDB Atlas
-- Gmail credentials with an App Password if you want OTP emails delivered
+- A Resend API key and verified sender domain for production email delivery
 
 The client and server are npm workspaces. Install and run both from the repository root; separate client and server terminals are not needed.
 
@@ -108,7 +108,7 @@ npm run lint
 npm run build
 ```
 
-The production server serves the built client and API from one process. To test locally, build the client, set `NODE_ENV=production`, ensure `MONGO_URI`, `JWT_SECRET`, `EMAIL_USER`, and `EMAIL_PASS` are configured, then run `npm start`.
+The production server serves the built client and API from one process. To test locally, build the client, set `NODE_ENV=production`, ensure `MONGO_URI`, `JWT_SECRET`, and either `RESEND_API_KEY` plus `EMAIL_FROM` or `EMAIL_USER` plus `EMAIL_PASS` are configured, then run `npm start`.
 
 ## 7. Deploy to Render
 
@@ -116,7 +116,7 @@ The production server serves the built client and API from one process. To test 
 2. Connect the repository `Ankitprajapati790/eventora` (or select the public repository URL), branch `main`, region Oregon, and the repository root as the root directory.
 3. Set the build command to `npm install --include=dev && npm run build` and the start command to `npm run start`. Set the health check to `/api/health`.
 4. Choose a compute plan. The current live service uses Render's free plan, which may sleep when idle.
-5. Add `NODE_ENV=production`, `MONGO_URI`, `EMAIL_USER`, `EMAIL_PASS`, and a generated `JWT_SECRET` in Render's environment settings. Never commit these values or paste them into chat.
+5. Add `NODE_ENV=production`, `MONGO_URI`, `RESEND_API_KEY`, `EMAIL_FROM`, and a generated `JWT_SECRET` in Render's environment settings. Never commit these values or paste them into chat.
 6. Deploy and check the service URL. The live app is [https://eventora-n1ou.onrender.com](https://eventora-n1ou.onrender.com); its health endpoint should return `"status":"ok"` and `"database":"connected"`.
 7. To create the first admin on a fresh database, use a trusted local checkout whose `server/.env` points to the same MongoDB database. Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in the local shell, then run `npm run admin:create --workspace server`. The bootstrap refuses to add another admin if one exists.
 
@@ -125,7 +125,11 @@ The production server serves the built client and API from one process. To test 
 
 ## Email OTP Configuration
 
-For Gmail, enable 2-Step Verification in your Google Account and create an App Password. Put the Gmail address in `EMAIL_USER` and the App Password in `EMAIL_PASS`. Never use your normal Gmail password. Production startup requires both variables; incorrect SMTP credentials prevent OTP email delivery.
+For reliable delivery from Render, configure a Resend API key as `RESEND_API_KEY` and a sender address on a domain verified with Resend as `EMAIL_FROM` (for example, `Eventora <notifications@your-verified-domain.com>`). The app sends through Resend's HTTPS API, avoiding SMTP port restrictions on hosted platforms. Never commit the API key.
+
+For local development, Gmail SMTP is also supported: enable 2-Step Verification, create a Google App Password, and set `EMAIL_USER` and `EMAIL_PASS`. Do not use your normal Gmail password. Email delivery errors return promptly and are shown to the user; an unverified signup can retry OTP delivery by submitting the same email and password again.
+
+When using the Render Blueprint, set `RESEND_API_KEY` and `EMAIL_FROM` in the service's environment settings after verifying the sender domain with Resend. The app cannot deliver production emails until the provider key and sender address are valid.
 
 ## Booking and Payment Scope
 

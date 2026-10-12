@@ -49,7 +49,8 @@ const UserDashboard = () => {
         if (reason === null) return;
 
         try {
-            await api.delete(`/bookings/${id}`, { data: { reason: reason.trim() || 'No reason provided' } });
+            const { data } = await api.delete(`/bookings/${id}`, { data: { reason: reason.trim() || 'No reason provided' } });
+            if (data.emailWarning) alert(data.emailWarning);
             fetchBookings();
         } catch (error) {
             alert(error.response?.data?.message || 'Error cancelling booking');

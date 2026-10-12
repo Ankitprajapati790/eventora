@@ -8,6 +8,16 @@ const generateOTP = () => randomInt(100000, 1000000).toString();
 const normalizePaymentStatus = (paymentStatus, amount) => (
     Number(amount) === 0 || paymentStatus !== 'not_paid' ? 'paid' : 'not_paid'
 );
+const sendNotification = async (send) => {
+    try {
+        await send();
+        return null;
+    } catch (error) {
+        if (error.code !== 'EMAIL_DELIVERY_FAILED') throw error;
+        console.error('Booking notification email failed:', error.message);
+        return 'The booking was updated, but its notification email could not be delivered.';
+    }
+};
 
 exports.sendBookingOTP = async (req, res) => {
     try {
@@ -17,6 +27,9 @@ exports.sendBookingOTP = async (req, res) => {
         await sendOTPEmail(req.user.email, otp, 'event_booking');
         res.json({ message: 'OTP sent successfully' });
     } catch (error) {
+        if (error.code === 'EMAIL_DELIVERY_FAILED') {
+            return res.status(502).json({ message: 'Unable to send the booking verification email. Please try again shortly.' });
+        }
         res.status(500).json({ message: 'Error sending OTP', error: error.message });
     }
 };
@@ -48,9 +61,20 @@ exports.bookEvent = async (req, res) => {
         });
 
         await OTP.deleteOne({ _id: validOTP._id });
-        await sendBookingStatusEmail(req.user.email, req.user.name, event.title, 'pending', 'Your booking request is awaiting admin approval.', { date: event.date, location: event.location });
+        const emailWarning = await sendNotification(() => sendBookingStatusEmail(
+            req.user.email,
+            req.user.name,
+            event.title,
+            'pending',
+            'Your booking request is awaiting admin approval.',
+            { date: event.date, location: event.location }
+        ));
 
-        res.status(201).json({ message: 'Booking request submitted', booking });
+        res.status(201).json({
+            message: 'Booking request submitted',
+            booking,
+            ...(emailWarning && { emailWarning })
+        });
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
@@ -81,9 +105,18 @@ exports.confirmBooking = async (req, res) => {
         event.availableSeats -= 1;
         await event.save();
 
-        await sendBookingEmail(booking.userId.email, booking.userId.name, booking.eventId, booking.paymentStatus || 'paid');
+        const emailWarning = await sendNotification(() => sendBookingEmail(
+            booking.userId.email,
+            booking.userId.name,
+            booking.eventId,
+            booking.paymentStatus || 'paid'
+        ));
 
-        res.json({ message: 'Booking confirmed successfully', booking });
+        res.json({
+            message: 'Booking confirmed successfully',
+            booking,
+            ...(emailWarning && { emailWarning })
+        });
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
@@ -102,6 +135,7 @@ exports.getMyBookings = async (req, res) => {
 
 exports.cancelBooking = async (req, res) => {
     try {
+        let emailWarning = null;
         const booking = await Booking.findById(req.params.id).populate('userId').populate('eventId');
         if (!booking) return res.status(404).json({ message: 'Booking not found' });
 
@@ -127,10 +161,20 @@ exports.cancelBooking = async (req, res) => {
         }
 
         if (booking.userId && booking.eventId) {
-            await sendBookingStatusEmail(booking.userId.email, booking.userId.name, booking.eventId.title, 'cancelled', reason, { date: booking.eventId.date, location: booking.eventId.location });
+            emailWarning = await sendNotification(() => sendBookingStatusEmail(
+                booking.userId.email,
+                booking.userId.name,
+                booking.eventId.title,
+                'cancelled',
+                reason,
+                { date: booking.eventId.date, location: booking.eventId.location }
+            ));
         }
 
-        res.json({ message: 'Booking cancelled successfully' });
+        res.json({
+            message: 'Booking cancelled successfully',
+            ...(emailWarning && { emailWarning })
+        });
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });
     }

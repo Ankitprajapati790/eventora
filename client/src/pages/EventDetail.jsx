@@ -45,8 +45,8 @@ const EventDetail = () => {
                 setShowOTP(true);
                 setSuccessMsg('OTP sent to your email. Please verify to confirm booking.');
             } else {
-                await api.post('/bookings', { eventId: event._id, otp });
-                setSuccessMsg('Booking requested! Awaiting admin confirmation.');
+                const { data } = await api.post('/bookings', { eventId: event._id, otp });
+                setSuccessMsg(`${data.message || 'Booking requested! Awaiting admin confirmation.'}${data.emailWarning ? ` ${data.emailWarning}` : ''}`);
                 setShowOTP(false);
             }
         } catch (err) {

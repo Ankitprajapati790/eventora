@@ -151,7 +151,7 @@ const AdminDashboard = () => {
         setProcessingAction('approve');
 
         try {
-            await api.put(`/bookings/${booking._id}/confirm`, { paymentStatus });
+            const { data } = await api.put(`/bookings/${booking._id}/confirm`, { paymentStatus });
             const userName = booking.userId?.name || 'User';
             const userEmail = booking.userId?.email || 'email not available';
             const eventTitle = booking.eventId?.title || 'Event';
@@ -166,7 +166,7 @@ const AdminDashboard = () => {
             setSuccessModal({
                 open: true,
                 title: `Booking approved for ${userName}`,
-                message: `The booking for ${eventTitle} has been approved for ${userName} (${userEmail}). The booking confirmed email was sent successfully. Payment status: ${paymentLabel}.`
+                message: `The booking for ${eventTitle} has been approved for ${userName} (${userEmail}). ${data.emailWarning || 'The booking confirmation email was sent successfully.'} Payment status: ${paymentLabel}.`
             });
             await fetchData();
         } catch (error) {
@@ -191,7 +191,7 @@ const AdminDashboard = () => {
 
         try {
             const booking = bookings.find(b => b._id === rejectModal.bookingId);
-            await api.delete(`/bookings/${rejectModal.bookingId}`, { data: { reason } });
+            const { data } = await api.delete(`/bookings/${rejectModal.bookingId}`, { data: { reason } });
             const userName = booking?.userId?.name || 'User';
             const userEmail = booking?.userId?.email || 'email not available';
             const eventTitle = booking?.eventId?.title || 'Event';
@@ -206,7 +206,7 @@ const AdminDashboard = () => {
             setSuccessModal({
                 open: true,
                 title: `Booking rejected for ${userName}`,
-                message: `The booking for ${eventTitle} was rejected for ${userName} (${userEmail}). A rejection email with the reason was sent successfully.`
+                message: `The booking for ${eventTitle} was rejected for ${userName} (${userEmail}). ${data.emailWarning || 'A rejection email with the reason was sent successfully.'}`
             });
             await fetchData();
         } catch (error) {

@@ -18,7 +18,17 @@ exports.register = async (req, res) => {
         const { name, email, password, role } = req.body;
         const normalizedEmail = normalizeEmail(email);
         let user = await User.findOne({ email: normalizedEmail });
-        if (user) return res.status(400).json({ message: 'User already exists' });
+        if (user) {
+            if (user.isVerified || !(await bcrypt.compare(password, user.password))) {
+                return res.status(400).json({ message: 'Invalid credentials' });
+            }
+
+            const otp = generateOTP();
+            await OTP.findOneAndDelete({ email: normalizedEmail, action: 'account_verification' });
+            await OTP.create({ email: normalizedEmail, otp, action: 'account_verification' });
+            await sendOTPEmail(normalizedEmail, otp, 'account_verification');
+            return res.json({ message: 'OTP sent to email. Please verify.', email: normalizedEmail });
+        }
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
@@ -40,6 +50,9 @@ exports.register = async (req, res) => {
             email: user.email
         });
     } catch (error) {
+        if (error.code === 'EMAIL_DELIVERY_FAILED') {
+            return res.status(502).json({ message: 'Unable to send the verification email. Please try again shortly.' });
+        }
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };
@@ -70,6 +83,9 @@ exports.login = async (req, res) => {
             token: generateToken(user.id, user.role)
         });
     } catch (error) {
+        if (error.code === 'EMAIL_DELIVERY_FAILED') {
+            return res.status(502).json({ message: 'Unable to send the verification email. Please try again shortly.' });
+        }
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };
@@ -144,6 +160,9 @@ exports.requestAdminChange = async (req, res) => {
             message: 'OTP sent to the current admin email. Verify it to change admin credentials.'
         });
     } catch (error) {
+        if (error.code === 'EMAIL_DELIVERY_FAILED') {
+            return res.status(502).json({ message: 'Unable to send the admin verification email. Please try again shortly.' });
+        }
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };

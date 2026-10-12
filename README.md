@@ -34,7 +34,7 @@ The React single-page application communicates with an Express REST API backed b
 - **Event CRUD:** Create, edit, and delete listings with dates, categories, locations, images, prices, and seat capacity.
 - **Booking lifecycle:** OTP-confirmed requests, duplicate-request prevention, admin approval or rejection, cancellation reasons, and seat availability updates.
 - **User and admin dashboards:** Booking status for users; event management, booking review, and paid-revenue totals for admins.
-- **Email notifications:** Nodemailer sends OTP and booking status messages. Local development prints OTPs in the server terminal when email is not configured.
+- **Email notifications:** OTP and booking status messages use the Resend HTTPS API in production, with Gmail SMTP available for local development.
 - **Single-service deployment:** Render serves the production React build and Express API from one web service.
 
 > [!NOTE]
@@ -48,7 +48,7 @@ The React single-page application communicates with an Express REST API backed b
 | Backend | Node.js, Express |
 | Data | MongoDB, Mongoose |
 | Authentication | JWT, bcryptjs, time-limited email OTPs |
-| Email | Nodemailer |
+| Email | Resend HTTPS API, Nodemailer SMTP fallback |
 | Quality checks | Node.js test runner, ESLint, Vite production build |
 | Hosting | Render Blueprint (`render.yaml`) |
 
@@ -88,7 +88,7 @@ Requirements: Node.js 20 or newer and a reachable MongoDB database. MongoDB Atla
    Copy-Item server/.env.example server/.env
    ```
 
-2. Edit `server/.env`. Set `MONGO_URI` to your database connection string and replace the sample `JWT_SECRET` with a private random value. Set `EMAIL_USER` and `EMAIL_PASS` to enable email delivery; otherwise development OTPs appear in the server terminal.
+2. Edit `server/.env`. Set `MONGO_URI` to your database connection string and replace the sample `JWT_SECRET` with a private random value. For local Gmail delivery, set `EMAIL_USER` and `EMAIL_PASS`. For production, configure `RESEND_API_KEY` and `EMAIL_FROM` with a verified sender; see [Email OTP Configuration](SETUP_GUIDE.md#email-otp-configuration).
 3. From the project root, install and start both applications:
 
    ```sh
@@ -136,7 +136,7 @@ All endpoints are prefixed with `/api`.
 
 **Live application:** [https://eventora-n1ou.onrender.com](https://eventora-n1ou.onrender.com). The Render Web Service serves the production React client and API from one URL. The free instance may sleep when idle, so its first request can take longer to respond.
 
-Render stores the production `MONGO_URI`, `EMAIL_USER`, `EMAIL_PASS`, and generated `JWT_SECRET`. To create an admin on a fresh database, use a trusted local checkout configured to the same database, set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in the local shell, and run `npm run admin:create --workspace server`. The free Render plan does not provide the Shell workflow described by paid plans. See [SETUP_GUIDE.md](SETUP_GUIDE.md) for details.
+Render stores the production `MONGO_URI`, `RESEND_API_KEY`, `EMAIL_FROM`, and generated `JWT_SECRET`. To create an admin on a fresh database, use a trusted local checkout configured to the same database, set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in the local shell, and run `npm run admin:create --workspace server`. The free Render plan does not provide the Shell workflow described by paid plans. See [SETUP_GUIDE.md](SETUP_GUIDE.md) for details.
 
 ## Contact
 

@@ -49,7 +49,10 @@ const startServer = async () => {
       throw new Error('MONGO_URI must be configured in production.');
     }
 
-    await mongoose.connect(mongoUri);
+    await mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 10000,
+      connectTimeoutMS: 10000
+    });
     console.log('MongoDB Connected');
     app.listen(PORT, () => console.log(`Eventora running on port ${PORT}`));
   } catch (error) {
