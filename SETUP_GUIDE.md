@@ -1,6 +1,23 @@
-# Eventora Setup Guide
+<h1 align="center">Eventora | Setup &amp; Deployment</h1>
+<p align="center"><strong>Local development → GitHub → Render</strong></p>
+<p align="center">
+	<img alt="Node.js 20 or newer" src="https://img.shields.io/badge/Node.js-20%2B-43853D?logo=nodedotjs&logoColor=white">
+	<img alt="MongoDB" src="https://img.shields.io/badge/Database-MongoDB-47A248?logo=mongodb&logoColor=white">
+	<img alt="Render" src="https://img.shields.io/badge/Hosting-Render-46E3B7?logo=render&logoColor=111111">
+</p>
 
-This guide covers local setup, MongoDB Atlas, email OTPs, creating the first admin, and deploying the app to Render.
+Use this guide to configure a local database, run the complete app, create the first admin account, and deploy the GitHub repository as a Render Blueprint.
+
+## Contents
+
+- [Requirements](#requirements)
+- [Configure MongoDB](#1-create-a-mongodb-atlas-database)
+- [Set local environment](#2-configure-local-environment)
+- [Run locally](#3-start-the-application)
+- [Create the first admin](#4-create-the-first-admin)
+- [Test and build](#6-run-checks)
+- [Deploy to Render](#7-deploy-to-render)
+- [Email OTP](#email-otp-configuration)
 
 ## Requirements
 
@@ -9,6 +26,9 @@ This guide covers local setup, MongoDB Atlas, email OTPs, creating the first adm
 - Gmail credentials with an App Password if you want OTP emails delivered
 
 The client and server are npm workspaces. Install and run both from the repository root; separate client and server terminals are not needed.
+
+> [!IMPORTANT]
+> Use Node.js 20 or newer. MongoDB must be reachable before the API starts; `npm install` does not create or host a database.
 
 ## 1. Create a MongoDB Atlas Database
 
@@ -38,6 +58,9 @@ PORT=5000
 ```
 
 Keep `server/.env` private. It is ignored by Git; never paste secrets into source files or commit history. For local testing without email, leave the email values blank and read OTPs from the server terminal.
+
+> [!WARNING]
+> URL-encode reserved characters in MongoDB usernames and passwords. Never commit a populated `.env` file or paste credentials into a public issue.
 
 ## 3. Start the Application
 
@@ -87,11 +110,16 @@ The production server serves the built client and API from one process. To test 
 
 ## 7. Deploy to Render
 
-1. Push the project repository to GitHub.
-2. In Render, create a new **Blueprint** and select the GitHub repository. Render reads `render.yaml` to create one Node web service.
-3. Set the requested `MONGO_URI`, `EMAIL_USER`, and `EMAIL_PASS` values in Render. Render generates `JWT_SECRET`; keep all secret values in Render's environment settings, not in GitHub.
-4. Deploy. The build runs `npm install` and `npm run build`; the start command runs `npm start`. Render sets `NODE_ENV=production` and uses `/api/health` for its health check.
-5. In the Render Shell, set `ADMIN_EMAIL` and a strong `ADMIN_PASSWORD`, then run `npm run admin:create --workspace server` once. Remove the temporary values from the service environment when finished.
+1. Push the project repository to GitHub and confirm `render.yaml` is in the repository root.
+2. In Render, select **New > Blueprint**. Connect GitHub if prompted, then choose `Ankitprajapati790/eventora`.
+3. Review the Blueprint plan. It should create one Node web service named `eventora` from the repository root, with `npm install && npm run build` as the build command and `npm start` as the start command.
+4. Enter `MONGO_URI`, `EMAIL_USER`, and `EMAIL_PASS` in Render's secret environment fields. Render generates `JWT_SECRET`. Never commit these values or paste them into chat.
+5. Apply the Blueprint and wait for the build and deploy to finish. Render sets `NODE_ENV=production` and checks `/api/health`.
+6. Open the service URL and append `/api/health`. A healthy deployment returns JSON with `"status":"ok"` and `"database":"connected"`.
+7. Create the first admin from the Render Shell. Temporarily set `ADMIN_EMAIL` and `ADMIN_PASSWORD`, run `npm run admin:create --workspace server` from the repository root, then remove the temporary password from the service environment.
+
+> [!NOTE]
+> The admin bootstrap refuses to create another admin if one already exists. Choose a strong, unique password.
 
 ## Email OTP Configuration
 

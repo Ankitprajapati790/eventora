@@ -1,23 +1,43 @@
-# Eventora | Full-Stack Event Booking Platform
+<h1 align="center">Eventora</h1>
+<p align="center"><strong>Full-stack event discovery and booking management</strong></p>
+<p align="center">A MERN application for event listings, verified booking requests, and administrator review.</p>
 
-Eventora is a MERN application for discovering events and managing ticket requests. I built it around a complete booking workflow: account verification, event discovery, OTP-confirmed booking requests, and admin review.
+<p align="center">
+   <img alt="React 18" src="https://img.shields.io/badge/React-18-149ECA?logo=react&logoColor=white">
+   <img alt="Node.js 20 or newer" src="https://img.shields.io/badge/Node.js-20%2B-43853D?logo=nodedotjs&logoColor=white">
+   <img alt="Express 4" src="https://img.shields.io/badge/Express-4-333333?logo=express&logoColor=white">
+   <img alt="MongoDB and Mongoose" src="https://img.shields.io/badge/MongoDB-Mongoose-47A248?logo=mongodb&logoColor=white">
+   <img alt="Render deployment" src="https://img.shields.io/badge/Deploy-Render-46E3B7?logo=render&logoColor=111111">
+</p>
 
-## Project Overview
+<p align="center">
+   <a href="#overview">Overview</a> ·
+   <a href="#features">Features</a> ·
+   <a href="#workflow">Workflow</a> ·
+   <a href="#run-locally">Run locally</a> ·
+   <a href="#deploy-to-render">Deploy</a>
+</p>
 
-The app has a React single-page client and an Express REST API backed by MongoDB. Users can browse and search events, request tickets, check booking status, and cancel a request. Admins can manage events, review bookings, record payment status, and view operational totals.
+Eventora is a full-stack JavaScript project for discovering events and managing ticket requests. I built the booking flow to connect account verification, event discovery, OTP-confirmed requests, and admin review in one application.
+
+## Overview
+
+The React single-page application communicates with an Express REST API backed by MongoDB. Users browse and search listings, submit a verified booking request, and manage their bookings. Admins manage events, review requests, record payment status, and monitor booking totals.
 
 **Booking flow:** Register and verify by email OTP → browse or search events → verify a booking request with OTP → admin approves or rejects it → user checks the result in the dashboard.
 
 ## Features
 
-- **Authentication:** Registration, login, password hashing with bcrypt, JWT sessions, and email OTP account verification.
-- **Role-based access control:** Admin-only event and booking management is enforced by Express middleware and database roles.
-- **Event management:** Create, update, and delete events with date, time, category, location, image URL, ticket price, and seat capacity.
-- **Booking lifecycle:** OTP-confirmed requests, duplicate-request checks, admin approval or rejection, cancellation reasons, and availability updates when a booking is confirmed or cancelled.
-- **Payment tracking:** Admins record paid or unpaid status for an approved booking. Eventora does not process payments or connect to a payment gateway.
-- **Dashboards:** Users can review their bookings; admins can manage events and bookings and review paid revenue and booking totals.
-- **Email:** Nodemailer sends account and booking OTPs and booking status notifications. In local development, OTPs are printed in the server terminal when email settings are omitted.
-- **Deployment:** One Render web service serves the built React client and Express API from the same origin.
+- **Account security:** Password hashing with bcrypt, JWT authentication, five-minute OTP records, and verified account registration.
+- **Role-based authorization:** Express middleware protects administrator event and booking operations; roles are read from MongoDB.
+- **Event CRUD:** Create, edit, and delete listings with dates, categories, locations, images, prices, and seat capacity.
+- **Booking lifecycle:** OTP-confirmed requests, duplicate-request prevention, admin approval or rejection, cancellation reasons, and seat availability updates.
+- **User and admin dashboards:** Booking status for users; event management, booking review, and paid-revenue totals for admins.
+- **Email notifications:** Nodemailer sends OTP and booking status messages. Local development prints OTPs in the server terminal when email is not configured.
+- **Single-service deployment:** Render serves the production React build and Express API from one web service.
+
+> [!NOTE]
+> Eventora records payment status manually. It does not accept payments or integrate a payment gateway; the payment result routes are informational.
 
 ## Technology
 
@@ -31,6 +51,8 @@ The app has a React single-page client and an Express REST API backed by MongoDB
 | Quality checks | Node.js test runner, ESLint, Vite production build |
 | Hosting | Render Blueprint (`render.yaml`) |
 
+The client and server use JavaScript. npm workspaces coordinate installation and scripts through one root lockfile.
+
 ## Repository Layout
 
 ```text
@@ -39,13 +61,21 @@ server/       Express API, MongoDB models, controllers, and tests
 render.yaml   Single-service Render deployment configuration
 ```
 
-## Booking Workflow
+## Workflow
 
-The sequence below shows the API, booking controller, MongoDB, and email handoffs. The flowchart summarizes the user and admin steps.
+The sequence diagram shows how the client, API, database, and email service participate in booking. The flowchart summarizes the user and admin decisions.
 
 ![Eventora booking API sequence](dfd.png)
 
 ![Eventora user and admin booking flow](fc.png)
+
+## Engineering Highlights
+
+- Centralized REST endpoints for authentication, events, and bookings.
+- Database-backed authorization and booking state rather than client-only permissions.
+- Cryptographically generated OTPs with five-minute database expiration.
+- Literal, bounded event search input to avoid treating user text as a regular expression.
+- Tests for booking status, event defaults, and security/media helpers.
 
 ## Run Locally
 
@@ -106,14 +136,6 @@ All endpoints are prefixed with `/api`.
 The repository includes a Render Blueprint. Create a Blueprint from the GitHub repository and configure `MONGO_URI`, `EMAIL_USER`, and `EMAIL_PASS` when prompted. Render generates `JWT_SECRET`. The build installs the npm workspaces and builds the client; the service then serves the client and API together.
 
 After the first deployment, set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in the Render service environment, run `npm run admin:create --workspace server` once from the Render Shell, then remove those temporary variables. Use a strong, unique password. See [SETUP_GUIDE.md](SETUP_GUIDE.md) for MongoDB Atlas, email, and deployment setup.
-
-## Engineering Notes
-
-- Booking and seat-count rules are handled by the API rather than trusted to client state.
-- Admin authorization is checked on protected API routes, not only hidden in the UI.
-- OTP records expire after five minutes; OTP values are generated using Node's cryptographic random number generator.
-- Event search treats user input as literal text rather than an executable regular expression.
-- Payment is recorded manually. There is no card processing, checkout provider, or real payment success/failure integration.
 
 ## Contact
 
