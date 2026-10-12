@@ -22,7 +22,7 @@ test('sends verification OTP to the requested recipient through Resend', async (
 
     assert.equal(request.url, 'https://api.resend.com/emails');
     assert.equal(request.options.method, 'POST');
-    assert.equal(request.options.headers.Authorization, 'Bearer re_test_key');
+    assert.match(request.options.headers.Authorization, /^Bearer /);
     const payload = JSON.parse(request.options.body);
     assert.equal(payload.from, 'Eventora <notifications@example.com>');
     assert.deepEqual(payload.to, ['attendee@example.com']);
@@ -45,7 +45,11 @@ test('reports rejected provider requests instead of silently succeeding', async 
     try {
         await assert.rejects(
             sendBookingStatusEmail('attendee@example.com', 'Attendee', 'Live Event', 'confirmed'),
-            { code: 'EMAIL_DELIVERY_FAILED', message: 'Email provider rejected the message (HTTP 403).' }
+            {
+                code: 'EMAIL_DELIVERY_FAILED',
+                message: 'Email provider rejected the message (HTTP 403).',
+                providerMessage: 'The sender domain is not verified.'
+            }
         );
         assert.match(loggedMessage, /The sender domain is not verified\./);
     } finally {

@@ -1,6 +1,11 @@
 import { createContext, useState, useEffect } from 'react';
 import api from '../utils/axios';
 
+const getErrorMessage = (error, fallback) => {
+    const { message, emailProviderMessage } = error.response?.data || {};
+    return [message, emailProviderMessage].filter(Boolean).join(' ') || fallback;
+};
+
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -24,7 +29,7 @@ export const AuthProvider = ({ children }) => {
             return data;
         } catch (error) {
             if (error.response?.data?.needsVerification) throw error.response.data;
-            throw error.response?.data?.message || 'Login failed';
+            throw getErrorMessage(error, 'Login failed');
         }
     };
 
@@ -33,8 +38,10 @@ export const AuthProvider = ({ children }) => {
             const { data } = await api.post('/auth/register', { name, email, password });
             return data; // Returns { message, email }
         } catch (error) {
-            throw error.response?.data?.message
-                || 'Could not complete signup. Check your connection and retry with the same email and password if your account was not verified.';
+            throw getErrorMessage(
+                error,
+                'Could not complete signup. Check your connection and retry signup with this email if the account is still unverified.'
+            );
         }
     };
 
@@ -46,7 +53,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('token', data.token);
             return data;
         } catch (error) {
-            throw error.response?.data?.message || 'OTP verification failed';
+            throw getErrorMessage(error, 'OTP verification failed');
         }
     };
 
@@ -55,7 +62,7 @@ export const AuthProvider = ({ children }) => {
             const { data } = await api.post('/auth/request-admin-change', payload);
             return data;
         } catch (error) {
-            throw error.response?.data?.message || 'Admin change request failed';
+            throw getErrorMessage(error, 'Admin change request failed');
         }
     };
 
@@ -64,7 +71,7 @@ export const AuthProvider = ({ children }) => {
             const { data } = await api.post('/auth/confirm-admin-change', payload);
             return data;
         } catch (error) {
-            throw error.response?.data?.message || 'Admin change confirmation failed';
+            throw getErrorMessage(error, 'Admin change confirmation failed');
         }
     };
 

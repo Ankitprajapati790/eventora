@@ -15,7 +15,8 @@ const sendNotification = async (send) => {
     } catch (error) {
         if (error.code !== 'EMAIL_DELIVERY_FAILED') throw error;
         console.error('Booking notification email failed:', error.message);
-        return 'The booking was updated, but its notification email could not be delivered.';
+        const providerDetails = error.providerMessage ? ` Provider: ${error.providerMessage}` : '';
+        return `The booking was updated, but its notification email could not be delivered.${providerDetails}`;
     }
 };
 
@@ -28,7 +29,10 @@ exports.sendBookingOTP = async (req, res) => {
         res.json({ message: 'OTP sent successfully' });
     } catch (error) {
         if (error.code === 'EMAIL_DELIVERY_FAILED') {
-            return res.status(502).json({ message: 'Unable to send the booking verification email. Please try again shortly.' });
+            return res.status(502).json({
+                message: 'Unable to send the booking verification email. Please try again shortly.',
+                ...(error.providerMessage && { emailProviderMessage: error.providerMessage })
+            });
         }
         res.status(500).json({ message: 'Error sending OTP', error: error.message });
     }

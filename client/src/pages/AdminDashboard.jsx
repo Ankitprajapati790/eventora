@@ -170,7 +170,8 @@ const AdminDashboard = () => {
             });
             await fetchData();
         } catch (error) {
-            alert(error.response?.data?.message || 'Error confirming booking');
+            const { message, emailProviderMessage } = error.response?.data || {};
+            alert([message, emailProviderMessage].filter(Boolean).join(' ') || 'Error confirming booking');
         } finally {
             setProcessingBookingId(null);
             setProcessingAction('');
@@ -210,7 +211,8 @@ const AdminDashboard = () => {
             });
             await fetchData();
         } catch (error) {
-            alert(error.response?.data?.message || 'Error cancelling booking');
+            const { message, emailProviderMessage } = error.response?.data || {};
+            alert([message, emailProviderMessage].filter(Boolean).join(' ') || 'Error cancelling booking');
         } finally {
             setProcessingBookingId(null);
             setProcessingAction('');

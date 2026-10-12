@@ -19,9 +19,14 @@ exports.register = async (req, res) => {
         const normalizedEmail = normalizeEmail(email);
         let user = await User.findOne({ email: normalizedEmail });
         if (user) {
-            if (user.isVerified || !(await bcrypt.compare(password, user.password))) {
+            if (user.isVerified) {
                 return res.status(400).json({ message: 'Invalid credentials' });
             }
+
+            const salt = await bcrypt.genSalt(10);
+            user.name = name;
+            user.password = await bcrypt.hash(password, salt);
+            await user.save();
 
             const otp = generateOTP();
             await OTP.findOneAndDelete({ email: normalizedEmail, action: 'account_verification' });
@@ -51,7 +56,10 @@ exports.register = async (req, res) => {
         });
     } catch (error) {
         if (error.code === 'EMAIL_DELIVERY_FAILED') {
-            return res.status(502).json({ message: 'Unable to send the verification email. Please try again shortly.' });
+            return res.status(502).json({
+                message: 'Unable to send the verification email. Please try again shortly.',
+                ...(error.providerMessage && { emailProviderMessage: error.providerMessage })
+            });
         }
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
@@ -84,7 +92,10 @@ exports.login = async (req, res) => {
         });
     } catch (error) {
         if (error.code === 'EMAIL_DELIVERY_FAILED') {
-            return res.status(502).json({ message: 'Unable to send the verification email. Please try again shortly.' });
+            return res.status(502).json({
+                message: 'Unable to send the verification email. Please try again shortly.',
+                ...(error.providerMessage && { emailProviderMessage: error.providerMessage })
+            });
         }
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
@@ -161,7 +172,10 @@ exports.requestAdminChange = async (req, res) => {
         });
     } catch (error) {
         if (error.code === 'EMAIL_DELIVERY_FAILED') {
-            return res.status(502).json({ message: 'Unable to send the admin verification email. Please try again shortly.' });
+            return res.status(502).json({
+                message: 'Unable to send the admin verification email. Please try again shortly.',
+                ...(error.providerMessage && { emailProviderMessage: error.providerMessage })
+            });
         }
         res.status(500).json({ message: 'Server Error', error: error.message });
     }

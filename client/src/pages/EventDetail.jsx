@@ -50,7 +50,8 @@ const EventDetail = () => {
                 setShowOTP(false);
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'Booking failed');
+            const { message, emailProviderMessage } = err.response?.data || {};
+            setError([message, emailProviderMessage].filter(Boolean).join(' ') || 'Booking failed');
         } finally {
             setBookingLoading(false);
         }

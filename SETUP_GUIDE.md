@@ -127,7 +127,7 @@ The production server serves the built client and API from one process. To test 
 
 For reliable delivery from Render, configure a Resend API key as `RESEND_API_KEY` and a sender address on a domain verified with Resend as `EMAIL_FROM` (for example, `Eventora <notifications@your-verified-domain.com>`). The app sends through Resend's HTTPS API, avoiding SMTP port restrictions on hosted platforms. Never commit the API key.
 
-For local development, Gmail SMTP is also supported: enable 2-Step Verification, create a Google App Password, and set `EMAIL_USER` and `EMAIL_PASS`. Do not use your normal Gmail password. Email delivery errors return promptly and are shown to the user; an unverified signup can retry OTP delivery by submitting the same email and password again.
+For local development, Gmail SMTP is also supported: enable 2-Step Verification, create a Google App Password, and set `EMAIL_USER` and `EMAIL_PASS`. Do not use your normal Gmail password. Email delivery errors return promptly and include the provider's rejection reason when available. If a signup is unverified because delivery failed, submit the same email again to set/update the pending account password and request a fresh OTP.
 
 When using the Render Blueprint, set `RESEND_API_KEY` and `EMAIL_FROM` in the service's environment settings after verifying the sender domain with Resend. The app cannot deliver production emails until the provider key and sender address are valid.
 

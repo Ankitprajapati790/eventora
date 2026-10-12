@@ -27,10 +27,11 @@ const transporter = emailUser && emailPass
     : null;
 
 class EmailDeliveryError extends Error {
-    constructor(message, cause) {
+    constructor(message, cause, providerMessage = '') {
         super(message, { cause });
         this.name = 'EmailDeliveryError';
         this.code = 'EMAIL_DELIVERY_FAILED';
+        this.providerMessage = providerMessage;
     }
 }
 
@@ -67,7 +68,11 @@ const sendEmail = async ({ to, subject, html }) => {
             console.error(
                 `Email provider rejected a message (HTTP ${response.status})${providerMessage ? `: ${providerMessage}` : ''}`
             );
-            throw new EmailDeliveryError(`Email provider rejected the message (HTTP ${response.status}).`);
+            throw new EmailDeliveryError(
+                `Email provider rejected the message (HTTP ${response.status}).`,
+                undefined,
+                providerMessage
+            );
         }
         return;
     }

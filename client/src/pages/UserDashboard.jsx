@@ -53,7 +53,8 @@ const UserDashboard = () => {
             if (data.emailWarning) alert(data.emailWarning);
             fetchBookings();
         } catch (error) {
-            alert(error.response?.data?.message || 'Error cancelling booking');
+            const { message, emailProviderMessage } = error.response?.data || {};
+            alert([message, emailProviderMessage].filter(Boolean).join(' ') || 'Error cancelling booking');
         }
     };
 
