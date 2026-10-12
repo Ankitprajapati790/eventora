@@ -8,6 +8,8 @@
 
 Use this guide to configure a local database, run the complete app, create the first admin account, and deploy the GitHub repository as a Render Blueprint.
 
+<p align="center"><strong>Live application:</strong> <a href="https://eventora-n1ou.onrender.com">Open Eventora</a></p>
+
 ## Contents
 
 - [Requirements](#requirements)
@@ -110,16 +112,16 @@ The production server serves the built client and API from one process. To test 
 
 ## 7. Deploy to Render
 
-1. Push the project repository to GitHub and confirm `render.yaml` is in the repository root.
-2. In Render, select **New > Blueprint**. Connect GitHub if prompted, then choose `Ankitprajapati790/eventora`.
-3. Review the Blueprint plan. It should create one Node web service named `eventora` from the repository root, with `npm install && npm run build` as the build command and `npm start` as the start command.
-4. Enter `MONGO_URI`, `EMAIL_USER`, and `EMAIL_PASS` in Render's secret environment fields. Render generates `JWT_SECRET`. Never commit these values or paste them into chat.
-5. Apply the Blueprint and wait for the build and deploy to finish. Render sets `NODE_ENV=production` and checks `/api/health`.
-6. Open the service URL and append `/api/health`. A healthy deployment returns JSON with `"status":"ok"` and `"database":"connected"`.
-7. Create the first admin from the Render Shell. Temporarily set `ADMIN_EMAIL` and `ADMIN_PASSWORD`, run `npm run admin:create --workspace server` from the repository root, then remove the temporary password from the service environment.
+1. Push the project to GitHub and select **New > Web Service** in Render.
+2. Connect the repository `Ankitprajapati790/eventora` (or select the public repository URL), branch `main`, region Oregon, and the repository root as the root directory.
+3. Set the build command to `npm install --include=dev && npm run build` and the start command to `npm run start`. Set the health check to `/api/health`.
+4. Choose a compute plan. The current live service uses Render's free plan, which may sleep when idle.
+5. Add `NODE_ENV=production`, `MONGO_URI`, `EMAIL_USER`, `EMAIL_PASS`, and a generated `JWT_SECRET` in Render's environment settings. Never commit these values or paste them into chat.
+6. Deploy and check the service URL. The live app is [https://eventora-n1ou.onrender.com](https://eventora-n1ou.onrender.com); its health endpoint should return `"status":"ok"` and `"database":"connected"`.
+7. To create the first admin on a fresh database, use a trusted local checkout whose `server/.env` points to the same MongoDB database. Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in the local shell, then run `npm run admin:create --workspace server`. The bootstrap refuses to add another admin if one exists.
 
 > [!NOTE]
-> The admin bootstrap refuses to create another admin if one already exists. Choose a strong, unique password.
+> Public-repository deployments do not automatically deploy future commits. Connect Render's GitHub integration to enable automatic deploys. The free plan does not include the Render Shell workflow.
 
 ## Email OTP Configuration
 

@@ -1,6 +1,7 @@
 <h1 align="center">Eventora</h1>
 <p align="center"><strong>Full-stack event discovery and booking management</strong></p>
 <p align="center">A MERN application for event listings, verified booking requests, and administrator review.</p>
+<p align="center"><a href="https://eventora-n1ou.onrender.com"><img alt="Live Demo - Open Eventora" src="https://img.shields.io/badge/LIVE%20DEMO-Open%20Eventora-10A37F?style=for-the-badge&logo=render&logoColor=white"></a></p>
 
 <p align="center">
    <img alt="React 18" src="https://img.shields.io/badge/React-18-149ECA?logo=react&logoColor=white">
@@ -133,9 +134,9 @@ All endpoints are prefixed with `/api`.
 
 ## Deploy to Render
 
-The repository includes a Render Blueprint. Create a Blueprint from the GitHub repository and configure `MONGO_URI`, `EMAIL_USER`, and `EMAIL_PASS` when prompted. Render generates `JWT_SECRET`. The build installs the npm workspaces and builds the client; the service then serves the client and API together.
+**Live application:** [https://eventora-n1ou.onrender.com](https://eventora-n1ou.onrender.com). The Render Web Service serves the production React client and API from one URL. The free instance may sleep when idle, so its first request can take longer to respond.
 
-After the first deployment, set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in the Render service environment, run `npm run admin:create --workspace server` once from the Render Shell, then remove those temporary variables. Use a strong, unique password. See [SETUP_GUIDE.md](SETUP_GUIDE.md) for MongoDB Atlas, email, and deployment setup.
+Render stores the production `MONGO_URI`, `EMAIL_USER`, `EMAIL_PASS`, and generated `JWT_SECRET`. To create an admin on a fresh database, use a trusted local checkout configured to the same database, set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in the local shell, and run `npm run admin:create --workspace server`. The free Render plan does not provide the Shell workflow described by paid plans. See [SETUP_GUIDE.md](SETUP_GUIDE.md) for details.
 
 ## Contact
 
