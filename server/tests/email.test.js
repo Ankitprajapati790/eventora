@@ -31,10 +31,24 @@ test('sends verification OTP to the requested recipient through Resend', async (
 });
 
 test('reports rejected provider requests instead of silently succeeding', async () => {
-    global.fetch = async () => ({ ok: false, status: 401 });
+    let loggedMessage = '';
+    const originalError = console.error;
+    console.error = (message) => {
+        loggedMessage = message;
+    };
+    global.fetch = async () => ({
+        ok: false,
+        status: 403,
+        text: async () => JSON.stringify({ message: 'The sender domain is not verified.' })
+    });
 
-    await assert.rejects(
-        sendBookingStatusEmail('attendee@example.com', 'Attendee', 'Live Event', 'confirmed'),
-        { code: 'EMAIL_DELIVERY_FAILED', message: 'Email provider rejected the message (HTTP 401).' }
-    );
+    try {
+        await assert.rejects(
+            sendBookingStatusEmail('attendee@example.com', 'Attendee', 'Live Event', 'confirmed'),
+            { code: 'EMAIL_DELIVERY_FAILED', message: 'Email provider rejected the message (HTTP 403).' }
+        );
+        assert.match(loggedMessage, /The sender domain is not verified\./);
+    } finally {
+        console.error = originalError;
+    }
 });

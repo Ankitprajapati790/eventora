@@ -33,7 +33,8 @@ export const AuthProvider = ({ children }) => {
             const { data } = await api.post('/auth/register', { name, email, password });
             return data; // Returns { message, email }
         } catch (error) {
-            throw error.response?.data?.message || 'Registration failed';
+            throw error.response?.data?.message
+                || 'Could not complete signup. Check your connection and retry with the same email and password if your account was not verified.';
         }
     };
 

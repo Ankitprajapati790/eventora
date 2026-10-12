@@ -55,6 +55,18 @@ const sendEmail = async ({ to, subject, html }) => {
         }
 
         if (!response.ok) {
+            const responseBody = await response.text();
+            let providerMessage = '';
+            try {
+                const details = JSON.parse(responseBody);
+                providerMessage = typeof details.message === 'string' ? details.message : '';
+            } catch {
+                providerMessage = responseBody;
+            }
+            providerMessage = providerMessage.replace(/[\r\n]+/g, ' ').trim().slice(0, 300);
+            console.error(
+                `Email provider rejected a message (HTTP ${response.status})${providerMessage ? `: ${providerMessage}` : ''}`
+            );
             throw new EmailDeliveryError(`Email provider rejected the message (HTTP ${response.status}).`);
         }
         return;
